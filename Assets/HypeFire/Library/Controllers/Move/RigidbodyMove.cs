@@ -14,6 +14,10 @@ namespace HypeFire.Library.Controllers.Move
 
         [field: SerializeField] private float _speed = default;
 
+        [field: SerializeField] private float _force = default;
+
+        [field: SerializeField] private float _groundDistance = 5f;
+        
 
         [Tooltip("0 değeri hareket esnasında, fizik tarafından vektör yönüne uygulanan kuvvetleri geçersiz kılar.")]
         [field: SerializeField]
@@ -36,6 +40,8 @@ namespace HypeFire.Library.Controllers.Move
         protected float stopTimePercent => _stopTimer / _stopTime;
 
         public bool isMoving { get; private set; }
+        
+        public bool isJumping { get; private set; }
 
         public bool isAutoMoveEnabled
         {
@@ -43,6 +49,8 @@ namespace HypeFire.Library.Controllers.Move
             set => _isAutoMoveEnabled = value;
         }
 
+       
+        
         public float speed
         {
             get => _speed;
@@ -87,6 +95,21 @@ namespace HypeFire.Library.Controllers.Move
             this.speed = speed;
             this.direction = direction;
             Moving();
+        }
+
+        public void Jumping()
+        {
+            isJumping = true;
+
+            velocity = direction * _force;
+        }
+
+        public void Jump(float force = 0f, Vector3 direction = default)
+        {
+            this._force = force;
+            this.direction = direction;
+            Jumping();  
+            
         }
 
         public void Stop()

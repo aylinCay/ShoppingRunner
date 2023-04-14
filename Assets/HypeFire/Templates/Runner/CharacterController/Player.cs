@@ -1,17 +1,20 @@
 using System;
+using System.Collections;
 using HypeFire.Library.Controllers.Move;
 using HypeFire.Library.Controllers.Rotate;
 using HypeFire.Library.Controllers.Swerve;
 using HypeFire.Templates.Runner.CharacterController.Abstract;
 using UnityEngine;
+using UnityEngine.UIElements;
 
-namespace HypeFire.Templates.Runner.CharacterController
+namespace ShoppingRush
 {
     [RequireComponent(typeof(RigidbodyMove), typeof(RotateController))]
-    public class Player : MonoBehaviour, ICharacterController
+    public class Player : MonoBehaviour, ICharacterController,IDragAndDropEvent
     {
         public float rotationOffset = 2;
         public float speed = 5f;
+        public float jumpForce;
 
         [field: SerializeField] public bool isMoveAble { get; private set; }
 
@@ -27,10 +30,11 @@ namespace HypeFire.Templates.Runner.CharacterController
 
         [field: SerializeField] public RotateController rotateController { get; private set; }
         
+        [field: SerializeField] public bool isImpact { get; set; }
+        
+        
         private Vector3 _rotationPosition = Vector3.zero;
-
-      
-
+        
         public virtual void Start()
         {
             
@@ -51,8 +55,10 @@ namespace HypeFire.Templates.Runner.CharacterController
                 isMoveAble = true;
                 rigidbodyMove.isAutoMoveEnabled = true;
             }
-            
+
+
         }
+        
 
         public virtual void FixedUpdate()
         {
@@ -63,24 +69,22 @@ namespace HypeFire.Templates.Runner.CharacterController
                 _rotationPosition.z = transform.position.z + rotationOffset;
                 _rotationPosition.x = swerveReader.GetHorizontalPosition();
                 _rotationPosition.y = swerveReader.GetVerticalPosition();
-                 Rotate(_rotationPosition);
-                
-                if (_rotationPosition.y >.5f)
-                {
-                    isJumpAble = true;
-                }
-            }
-            if (isMoveAble)
-            {
-                Move(speed, transform.TransformDirection(Vector3.forward));
-            }
+                Rotate(_rotationPosition);
 
-            if (isJumpAble)
-            {
-                Jump(7f,Vector3.up);
+                if (isMoveAble)
+                {
+                    Move(speed, transform.TransformDirection(Vector3.forward));
+                }
+
+                if (isJumpAble)
+                {
+                    Jump(jumpForce,Vector3.up);
+                    isJumpAble = false;
+                }
+                
             }
         }
-
+        
         public virtual  void Move(float speed, Vector3 direction)
         {
             rigidbodyMove.Move(speed, direction);
@@ -93,9 +97,7 @@ namespace HypeFire.Templates.Runner.CharacterController
 
         public virtual void Jump(float force, Vector3 direction)
         {
-              transform.position += direction * force * Time.deltaTime;
-
-              isJumpAble = false;
+            rigidbodyMove.Jump(force,direction);
         }
 
         public virtual void Stop()
@@ -108,6 +110,20 @@ namespace HypeFire.Templates.Runner.CharacterController
             rigidbodyMove.isAutoMoveEnabled = false;
             isStopped = true;
         }
-        
+
+        public void OnCollisionEnter(Collision collision)
+        {
+            if (collision.gameObject.CompareTag("Trampoline"))
+            {
+                isJumpAble = true;
+            }
+
+            if (collision.gameObject.CompareTag("Barrier"))
+            {
+                isImpact = true;
+              Destroy(collision.gameObject);
+            }
+            
+        }
     }
 }
